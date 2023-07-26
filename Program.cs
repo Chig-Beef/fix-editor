@@ -209,7 +209,7 @@ class Program
         string extension;
         for (int i = expOffset; i < curExplorerFiles.Length && i - expOffset < height; i++)
         {
-            Console.SetCursorPosition(dirIndent, i);
+            Console.SetCursorPosition(dirIndent, i - expOffset);
 
             index = curExplorerFiles[i].IndexOf('.');
             if (index != -1)
@@ -237,7 +237,7 @@ class Program
             for (int i = expOffset; i < curExplorerFiles.Length && i - expOffset < height; i++)
             {
                 size = new FileInfo(curDir + "\\" + curExplorerFiles[i]).Length;
-                Console.SetCursorPosition(subIndent, i);
+                Console.SetCursorPosition(subIndent, i - expOffset);
                 Console.Write(fmtFileSize(size));
             }
         }
@@ -361,6 +361,39 @@ class Program
             curMode = Modes.Commands;
             Console.SetCursorPosition(0, Console.WindowHeight - 2);
         }
+        else if (curKeyInfo.Key == ConsoleKey.Delete)
+        {
+            if (left == curFile.lines[curFile.curLine])
+            {
+                curFile.data[curFile.curLine] += curFile.data[curFile.curLine + 1];
+                curFile.data.RemoveAt(curFile.curLine + 1);
+                curFile.lines[curFile.curLine] += curFile.lines[curFile.curLine + 1];
+                curFile.lines.RemoveAt(curFile.curLine + 1);
+
+                for (int i = curFile.curLine; i < curFile.lines.Count; i++)
+                {
+                    clearLine(i);
+                    Console.Write(curFile.data[i]);
+                }
+                clearLine(curFile.lines.Count);
+
+                Console.SetCursorPosition(left, curFile.curLine);
+            }
+            else
+            {
+                curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Remove(left, 1);
+                curFile.lines[curFile.curLine]--;
+
+                Console.SetCursorPosition(0, Console.CursorTop);
+                clearLine(Console.CursorTop);
+                Console.Write(curFile.data[curFile.curLine]);
+                Console.SetCursorPosition(left, Console.CursorTop);
+            }
+        }
+        else if (curKeyInfo.Key == ConsoleKey.Insert)
+        {
+
+        }
         else if (curKeyInfo.Key == ConsoleKey.End)
         {
             if (curKeyInfo.Modifiers == ConsoleModifiers.Control)
@@ -384,6 +417,14 @@ class Program
             {
                 Console.SetCursorPosition(0, Console.CursorTop);
             }
+        }
+        else if (curKeyInfo.Key == ConsoleKey.PageUp)
+        {
+
+        }
+        else if (curKeyInfo.Key == ConsoleKey.PageDown)
+        {
+
         }
         else if (curKeyInfo.Key == ConsoleKey.UpArrow)
         {
@@ -477,6 +518,7 @@ class Program
     {
         ConsoleKeyInfo curKeyInfo = Console.ReadKey(true);
         char curChar = curKeyInfo.KeyChar;
+        int height = Console.WindowHeight;
         if (curChar == '\u0011')
         {
             curMode = Modes.Commands;
@@ -504,6 +546,16 @@ class Program
                 if (curExplorerInd == curExplorerDirs.Length)
                 {
                     curExplorerInd = 0;
+                    if (expOffset != 0)
+                    {
+                        expOffset = 0;
+                        displayDir();
+                    }
+                }
+                if (curExplorerInd - expOffset == height - 4)
+                {
+                    expOffset++;
+                    displayDir();
                 }
             }
             else if (curExplorerType == 1)
@@ -511,25 +563,59 @@ class Program
                 if (curExplorerInd == curExplorerFiles.Length)
                 {
                     curExplorerInd = 0;
+                    if (expOffset != 0)
+                    {
+                        expOffset = 0;
+                        displayDir();
+                    }
+                }
+                if (curExplorerInd - expOffset == height - 4)
+                {
+                    expOffset++;
+                    displayDir();
                 }
             }
-            Console.SetCursorPosition(dirIndent * curExplorerType, curExplorerInd);
+            Console.SetCursorPosition(dirIndent * curExplorerType, curExplorerInd-expOffset);
         }
         else if (curChar == 'e')
         {
             curExplorerInd--;
-            if (curExplorerInd == -1)
+            
+            if (curExplorerType == 0)
             {
-                if (curExplorerType == 0)
+                if (curExplorerInd == -1)
                 {
                     curExplorerInd = curExplorerDirs.Length - 1;
+                    if (curExplorerInd >= height - 4)
+                    {
+                        expOffset = curExplorerInd - height + 5;
+                        displayDir();
+                    }
                 }
-                else if (curExplorerType == 1)
+                if (curExplorerInd - expOffset == -1)
                 {
-                    curExplorerInd = curExplorerFiles.Length - 1;
+                    expOffset--;
+                    displayDir();
                 }
             }
-            Console.SetCursorPosition(dirIndent * curExplorerType, curExplorerInd);
+            else if (curExplorerType == 1)
+            {
+                if (curExplorerInd == -1)
+                {
+                    curExplorerInd = curExplorerFiles.Length - 1;
+                    if (curExplorerInd >= height - 4)
+                    {
+                        expOffset = curExplorerInd - height + 5;
+                        displayDir();
+                    }
+                }
+                if (curExplorerInd - expOffset == -1)
+                {
+                    expOffset--;
+                    displayDir();
+                }
+            }
+            Console.SetCursorPosition(dirIndent * curExplorerType, curExplorerInd-expOffset);
         }
         else if (curChar == '\r')
         {
