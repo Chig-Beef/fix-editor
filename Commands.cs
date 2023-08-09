@@ -343,7 +343,7 @@ namespace fix
                 Console.Clear();
 
                 int height = Console.WindowHeight - 4;
-                for (int i = curFile.offset; i < curFile.data.Count && i - curFile.offset < height; i++)
+                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] < height; i++)
                 {
                     Console.WriteLine(curFile.data[i]);
                 }
@@ -367,7 +367,7 @@ namespace fix
                 Console.Clear();
 
                 int height = Console.WindowHeight - 4;
-                for (int i = curFile.offset; i < curFile.data.Count && i - curFile.offset < height; i++)
+                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] < height; i++)
                 {
                     Console.WriteLine(curFile.data[i]);
                 }
@@ -387,7 +387,6 @@ namespace fix
             curMode = Modes.Exploring;
 
             validCommands = explorerCommands;
-            
 
             curExplorerDirs = Directory.GetDirectories(curDir).Prepend("../").ToArray();
             curExplorerFiles = Directory.GetFiles(curDir).ToArray();
@@ -440,6 +439,18 @@ namespace fix
         {
 
             Directory.CreateDirectory(curDir + "\\" + args[0]);
+
+            curExplorerDirs = Directory.GetDirectories(curDir).Prepend("../").ToArray();
+            curExplorerFiles = Directory.GetFiles(curDir).ToArray();
+
+            for (int i = 1; i < curExplorerDirs.Length; i++)
+            {
+                curExplorerDirs[i] = curExplorerDirs[i].Substring(curDir.Length + 1);
+            }
+            for (int i = 0; i < curExplorerFiles.Length; i++)
+            {
+                curExplorerFiles[i] = curExplorerFiles[i].Substring(curDir.Length + 1);
+            }
 
             clearInfoBar();
             infoBar();

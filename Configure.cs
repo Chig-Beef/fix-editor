@@ -1,4 +1,6 @@
-﻿namespace fix
+﻿using System.Drawing;
+
+namespace fix
 {
     internal class Configure
     {
@@ -9,6 +11,7 @@
             "expGap",
             "showSize",
             "runners",
+            "selectColor",
             "//",
         };
 
@@ -19,6 +22,7 @@
         public static int explorerGap = 8;
         public static int explorerSubGap = 4;
         public static bool showSizeFile = false;
+        public static ConsoleColor selectionColor = ConsoleColor.DarkGray;
 
         public static void Config(string[] instructs)
         {
@@ -44,7 +48,7 @@
             string start = temp[0];
             string[] args = temp.Skip(1).ToArray();
             bool result;
-            int val;
+            int val, color;
 
             if (!validInstructions.Contains(start))
             {
@@ -125,6 +129,22 @@
                     }
 
                     return getRunners(args[0]);
+                case "selectColor":
+                    if (args.Length != 1)
+                    {
+                        return new Panic("Incorrect number of parameters");
+                    }
+
+                    result = int.TryParse(args[0], out color);
+
+                    if (!result)
+                    {
+                        return new Panic("Color arguement was not valid int.");
+                    }
+
+                    selectionColor = (ConsoleColor)color;
+
+                    break;
             }
 
             return null;

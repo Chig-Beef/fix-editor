@@ -1,4 +1,5 @@
 ﻿using fix;
+using System.Data;
 
 class Program
 {
@@ -141,7 +142,7 @@ class Program
                 }
             }
 
-            Console.Write(infoBarValues[i] + '\t');
+            Console.Write(infoBarValues[i] + ' ');
 
             Console.ForegroundColor = ConsoleColor.Gray;
         }
@@ -164,6 +165,16 @@ class Program
     {
         int width = Console.WindowWidth;
         for (int x = 0; x < width; x++)
+        {
+            Console.SetCursorPosition(x, line);
+            Console.Write(" ");
+        }
+        Console.SetCursorPosition(0, line);
+    }
+
+    public static void clearLine(int line, int amt)
+    {
+        for (int x = 0; x < amt + 1 && x < Console.WindowWidth; x++)
         {
             Console.SetCursorPosition(x, line);
             Console.Write(" ");
@@ -248,9 +259,11 @@ class Program
     private static void WritingInstruct()
     {
         int left = Console.CursorLeft;
-        ConsoleKeyInfo curKeyInfo = Console.ReadKey();
+        int top = Console.CursorTop;
+        ConsoleKeyInfo curKeyInfo = Console.ReadKey(true);
         char curChar = curKeyInfo.KeyChar;
         FileTemp curFile = curFiles[curFileName];
+        int width = Console.WindowWidth;
 
         if (curChar == '\r')
         {
@@ -261,11 +274,12 @@ class Program
             curFile.lines.Insert(curFile.curLine, 0);
             curFile.data.Insert(curFile.curLine, "");
 
-            for (int i = curFile.curLine; i < curFile.lines.Count; i++)
+            clearLine(curFile.curLine - curFile.offset[1]);
+            for (int i = curFile.curLine + 1; i < curFile.lines.Count; i++)
             {
-                if (i - curFile.offset >  height) break;
+                if (i - curFile.offset[1] >  height) break;
 
-                clearLine(i - curFile.offset);
+                clearLine(i - curFile.offset[1], curFile.lines[i]);
                 Console.Write(curFile.data[i]);
             }
 
@@ -278,27 +292,27 @@ class Program
                 curFile.lines[curFile.curLine] = curFile.data[curFile.curLine].Length;
                 curFile.lines[curFile.curLine - 1] = curFile.data[curFile.curLine - 1].Length;
 
-                clearLine(curFile.curLine - 1 - curFile.offset);
-                clearLine(curFile.curLine - curFile.offset);
+                clearLine(curFile.curLine - 1 - curFile.offset[1]);
+                clearLine(curFile.curLine - curFile.offset[1]);
 
-                Console.SetCursorPosition(0, curFile.curLine - 1 - curFile.offset);
+                Console.SetCursorPosition(0, curFile.curLine - 1 - curFile.offset[1]);
                 Console.WriteLine(curFile.data[curFile.curLine - 1]);
                 Console.Write(curFile.data[curFile.curLine]);
             }
 
-            if (curFile.curLine - curFile.offset == height + 1)
+            if (curFile.curLine - curFile.offset[1] == height + 1)
             {
                 Console.SetCursorPosition(0, 0);
-                curFile.offset++;
+                curFile.offset[1]++;
 
-                for (int i = curFile.offset; i < curFile.data.Count && i - curFile.offset <= height; i++)
+                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] <= height; i++)
                 {
-                    clearLine(i - curFile.offset);
+                    clearLine(i - curFile.offset[1]);
                     Console.WriteLine(curFile.data[i]);
                 }
             }
 
-            Console.SetCursorPosition(curFile.lines[curFile.curLine], curFile.curLine - curFile.offset);
+            Console.SetCursorPosition(curFile.lines[curFile.curLine], curFile.curLine - curFile.offset[1]);
         }
         else if (curChar == '\b')
         {
@@ -338,6 +352,57 @@ class Program
 
             Console.SetCursorPosition(left - 1, Console.CursorTop);
         }
+        else if (curChar == '(')
+        {
+            if (left != curFile.lines[curFile.curLine])
+            {
+                curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Substring(0, left) + "()" + curFile.data[curFile.curLine].Substring(left);
+                Console.SetCursorPosition(0, curFile.curLine);
+                Console.Write(curFile.data[curFile.curLine]);
+                Console.SetCursorPosition(left + 1, curFile.curLine);
+            }
+            else
+            {
+                curFile.data[curFile.curLine] += "()";
+                Console.Write("()");
+                Console.SetCursorPosition(left + 1, top);
+            }
+            curFile.lines[curFile.curLine] += 2;
+        }
+        else if (curChar == '[')
+        {
+            if (left != curFile.lines[curFile.curLine])
+            {
+                curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Substring(0, left) + "[]" + curFile.data[curFile.curLine].Substring(left);
+                Console.SetCursorPosition(0, curFile.curLine);
+                Console.Write(curFile.data[curFile.curLine]);
+                Console.SetCursorPosition(left + 1, curFile.curLine);
+            }
+            else
+            {
+                curFile.data[curFile.curLine] += "[]";
+                Console.Write("[]");
+                Console.SetCursorPosition(left + 1, top);
+            }
+            curFile.lines[curFile.curLine] += 2;
+        }
+        else if (curChar == '{')
+        {
+            if (left != curFile.lines[curFile.curLine])
+            {
+                curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Substring(0, left) + "{}" + curFile.data[curFile.curLine].Substring(left);
+                Console.SetCursorPosition(0, curFile.curLine);
+                Console.Write(curFile.data[curFile.curLine]);
+                Console.SetCursorPosition(left + 1, curFile.curLine);
+            }
+            else
+            {
+                Console.Write("{}");
+                Console.SetCursorPosition(left + 1, top);
+                curFile.data[curFile.curLine] += "{}";
+            }
+            curFile.lines[curFile.curLine] += 2;
+        }
         else if (curChar == '\t')
         {
             if (left != curFile.lines[curFile.curLine])
@@ -356,10 +421,36 @@ class Program
         }
         else if (curChar == '\u0011') // ^q
         {
-            Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
-            Console.Write(" ");
             curMode = Modes.Commands;
             Console.SetCursorPosition(0, Console.WindowHeight - 2);
+        }
+        else if (curChar == '\u0013') // ^s
+        {
+            if (curFile.selection == null)
+            {
+                curFile.selection = new int[2] { left, curFile.curLine };
+            }
+            else
+            {
+                int[] curPos = new int[2] { left, curFile.curLine };
+                Console.BackgroundColor = Configure.selectionColor;
+
+                clearLine(curFile.selection[1]);
+                //Console.Write
+
+                Console.BackgroundColor = Configure.selectionColor;
+
+                for (int i = curFile.selection[1] + 1; i < curPos[1] - 1; i++)
+                {
+                    clearLine(i);
+                    Console.Write(curFile.data[i]);
+                }
+
+                clearLine(curPos[1]);
+
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.SetCursorPosition(left, top);
+            }
         }
         else if (curKeyInfo.Key == ConsoleKey.Delete)
         {
@@ -443,14 +534,14 @@ class Program
             else if (Console.CursorTop == 0) ;
             else Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop - 1);
 
-            if (curFile.curLine - curFile.offset < 0)
+            if (curFile.curLine - curFile.offset[1] < 0)
             {
                 Console.SetCursorPosition(0, 0);
-                curFile.offset--;
+                curFile.offset[1]--;
 
-                for (int i = curFile.offset; i < curFile.data.Count && i - curFile.offset <= height; i++)
+                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] <= height; i++)
                 {
-                    clearLine(i - curFile.offset);
+                    clearLine(i - curFile.offset[1], curFile.lines[i + 1]);
                     Console.WriteLine(curFile.data[i]);
                 }
                 Console.SetCursorPosition(left, 0);
@@ -475,11 +566,11 @@ class Program
             if (Console.CursorTop > height)
             {
                 Console.SetCursorPosition(0, 0);
-                curFile.offset++;
+                curFile.offset[1]++;
 
-                for (int i = curFile.offset; i < curFile.data.Count && i - curFile.offset <= height; i++)
+                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] <= height; i++)
                 {
-                    clearLine(i - curFile.offset);
+                    clearLine(i - curFile.offset[1], curFile.lines[i - 1]);
                     Console.WriteLine(curFile.data[i]);
                 }
                 Console.SetCursorPosition(left, height);
@@ -493,9 +584,29 @@ class Program
         }
         else if (curKeyInfo.Key == ConsoleKey.RightArrow)
         {
-            if (Console.CursorLeft == curFile.lines[curFile.curLine]) return;
+            if (Console.CursorLeft + curFile.offset[0] == curFile.lines[curFile.curLine]) return;
 
-            Console.SetCursorPosition(Console.CursorLeft + 1, Console.CursorTop);
+            if (Console.CursorLeft == width - 1)
+            {
+                curFile.offset[0]++;
+
+                int height = Console.WindowHeight - 4;
+                Console.SetCursorPosition(0, 0);
+
+                string line;
+                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] <= height; i++)
+                {
+                    clearLine(i - curFile.offset[1], curFile.lines[i]);
+                    line = curFile.data[i].Substring(curFile.offset[0]);
+                    if (line.Length > width) line = line.Substring(0, width);
+                    Console.WriteLine(line);
+                }
+
+                Console.SetCursorPosition(left, top);
+                return;
+            }
+
+            Console.SetCursorPosition(left + 1, top);
         }
         else
         {
@@ -503,12 +614,15 @@ class Program
             {
                 curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Substring(0, left) + curChar + curFile.data[curFile.curLine].Substring(left);
                 Console.SetCursorPosition(0, curFile.curLine);
-                Console.Write(curFile.data[curFile.curLine]);
+                string line = curFile.data[curFile.curLine];
+                if (line.Length > width) line = line.Substring(0, width);
+                Console.Write(line);
                 Console.SetCursorPosition(left+1, curFile.curLine);
             }
             else
             {
                 curFile.data[curFile.curLine] += curChar;
+                Console.Write(curChar);
             }
             curFile.lines[curFile.curLine]++;
         }
@@ -519,6 +633,7 @@ class Program
         ConsoleKeyInfo curKeyInfo = Console.ReadKey(true);
         char curChar = curKeyInfo.KeyChar;
         int height = Console.WindowHeight;
+        int width = Console.WindowWidth;
         if (curChar == '\u0011')
         {
             curMode = Modes.Commands;
@@ -657,7 +772,6 @@ class Program
             }
             else if (curExplorerType == 1)
             {
-
                 string fileName = curExplorerFiles[curExplorerInd];
 
                 curScreen = Screens.File_Editing;
@@ -671,17 +785,25 @@ class Program
 
                 Console.Clear();
 
-
                 for (int i = 0; i < curFiles[fileName].data.Count; i++)
                 {
                     curFiles[fileName].lines.Add(curFiles[fileName].data[i].Length);
-                    Console.WriteLine(curFiles[fileName].data[i]);
+                }
+
+                string line;
+                for (int i = 0; i < curFiles[fileName].data.Count && i < height - 5; i++)
+                {
+                    line = curFiles[fileName].data[i];
+                    if (line.Length > width)
+                    {
+                        line = line.Substring(0, width);
+                    }
+                    Console.WriteLine(line);
                 }
 
                 regularBar();
                 infoBarValues.Add(fileName);
                 infoBar();
-
             }
         }
     }
