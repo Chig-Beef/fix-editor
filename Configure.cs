@@ -39,10 +39,7 @@ namespace fix
 
         public static Panic Execute(string instruct)
         {
-            if (instruct == "")
-            {
-                return null;
-            }
+            if (instruct == "") return null;
 
             string[] temp = instruct.Split(' ');
             string start = temp[0];

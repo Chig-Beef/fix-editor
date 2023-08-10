@@ -1,5 +1,4 @@
 ﻿using fix;
-using System.Data;
 
 class Program
 {
@@ -17,13 +16,16 @@ class Program
     public static string curDir = Directory.GetCurrentDirectory();
     public static int dirIndent = 0;
     public static int expOffset = 0;
+    public static readonly int endFilePos = 4;
+    public static readonly int barPos = 3;
+    public static readonly int commandPos = 2;
+    public static readonly int infoPos = 1;
 
     public static string[] validCommands;
 
     public static string[] startCommands = new string[]
     {
         "fe",
-        //"nf",
         "q",
         "lf",
         "help",
@@ -88,10 +90,9 @@ class Program
 
     public static void disStartScreen()
     {
-        int width = Console.WindowWidth;
         int height = Console.WindowHeight;
 
-        Console.SetCursorPosition(Console.WindowWidth / 2 - 7, 1);
+        Console.SetCursorPosition(Console.WindowWidth / 2 - 7, 1); // Try to center
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("Welcome to FIX");
         Console.ForegroundColor = ConsoleColor.Gray;
@@ -108,27 +109,28 @@ class Program
         regularBar();
 
         validCommands = startCommands;
-        Console.SetCursorPosition(0, height - 2);
+        Console.SetCursorPosition(0, height - commandPos);
     }
 
     public static void regularBar()
     {
         int width = Console.WindowWidth;
         int height = Console.WindowHeight;
-        for (int x = 0; x < width; x++)
-        {
-            Console.SetCursorPosition(x, height - 3);
-            Console.Write("=");
-        }
+        string bar = "";
+
+        for (int x = 0; x < width; x++) bar += "=";
+
+        Console.SetCursorPosition(0, height - barPos);
+        Console.Write(bar);
     }
 
     public static void infoBar()
     {
         int index;
         string extension;
-        int width = Console.WindowWidth;
         int height = Console.WindowHeight;
-        Console.SetCursorPosition(0, height - 1);
+
+        Console.SetCursorPosition(0, height - infoPos);
         for (int i = 0; i < infoBarValues.Count; i++)
         {
             index = infoBarValues[i].IndexOf('.');
@@ -146,39 +148,42 @@ class Program
 
             Console.ForegroundColor = ConsoleColor.Gray;
         }
-        Console.SetCursorPosition(0, height - 2);
+        Console.SetCursorPosition(0, height - commandPos);
     }
 
     public static void clearCommandBar()
     {
         int width = Console.WindowWidth;
         int height = Console.WindowHeight;
-        for (int x = 0; x < width; x++)
-        {
-            Console.SetCursorPosition(x, height - 2);
-            Console.Write(" ");
-        }
-        Console.SetCursorPosition(0, height - 2);
+        string bar = "";
+
+        for (int x = 0; x < width; x++) bar += " ";
+
+        Console.SetCursorPosition(0, height - commandPos);
+        Console.Write(bar);
     }
 
     public static void clearLine(int line)
     {
         int width = Console.WindowWidth;
-        for (int x = 0; x < width; x++)
-        {
-            Console.SetCursorPosition(x, line);
-            Console.Write(" ");
-        }
+        string bar = "";
+
+        for (int x = 0; x < width; x++) bar += " ";
+
+        Console.SetCursorPosition(0, line);
+        Console.Write(bar);
         Console.SetCursorPosition(0, line);
     }
 
     public static void clearLine(int line, int amt)
     {
-        for (int x = 0; x < amt + 1 && x < Console.WindowWidth; x++)
-        {
-            Console.SetCursorPosition(x, line);
-            Console.Write(" ");
-        }
+        int width = Console.WindowWidth;
+        string bar = " ";
+
+        for (int x = 0; x < amt + 1 && x < width; x++) bar += " ";
+
+        Console.SetCursorPosition(0, line);
+        Console.Write(bar);
         Console.SetCursorPosition(0, line);
     }
 
@@ -186,12 +191,13 @@ class Program
     {
         int width = Console.WindowWidth;
         int height = Console.WindowHeight;
-        for (int x = 0; x < width; x++)
-        {
-            Console.SetCursorPosition(x, height - 1);
-            Console.Write(" ");
-        }
-        Console.SetCursorPosition(0, height - 1);
+        string bar = "";
+
+        for (int x = 0; x < width; x++) bar += " ";
+
+        Console.SetCursorPosition(0, height - infoPos);
+        Console.Write(bar);
+        Console.SetCursorPosition(0, height - infoPos);
     }
 
     public static void displayDir()
@@ -199,15 +205,13 @@ class Program
         Console.Clear();
         regularBar();
 
-        clearInfoBar();
         infoBarValues = new List<string>() { curDir };
         infoBar();
 
         Console.SetCursorPosition(0, 0);
 
         int max = 0;
-
-        int height = Console.WindowHeight - 4;
+        int height = Console.WindowHeight - endFilePos;
         for (int i = expOffset; i < curExplorerDirs.Length && i - expOffset < height; i++)
         {
             Console.WriteLine(curExplorerDirs[i]);
@@ -222,6 +226,7 @@ class Program
         {
             Console.SetCursorPosition(dirIndent, i - expOffset);
 
+            // Colouring
             index = curExplorerFiles[i].IndexOf('.');
             if (index != -1)
             {
@@ -260,28 +265,23 @@ class Program
     {
         int left = Console.CursorLeft;
         int top = Console.CursorTop;
+        int width = Console.WindowWidth;
+
         ConsoleKeyInfo curKeyInfo = Console.ReadKey(true);
         char curChar = curKeyInfo.KeyChar;
         FileTemp curFile = curFiles[curFileName];
-        int width = Console.WindowWidth;
 
         if (curChar == '\r')
         {
-            int height = Console.WindowHeight - 4;
+            int height = Console.WindowHeight - endFilePos;
 
             Console.Write('\n');
+
+            curFile.clearFile(curFile.curLine + 1, curFile.lines.Count);
             curFile.curLine++;
             curFile.lines.Insert(curFile.curLine, 0);
             curFile.data.Insert(curFile.curLine, "");
-
-            clearLine(curFile.curLine - curFile.offset[1]);
-            for (int i = curFile.curLine + 1; i < curFile.lines.Count; i++)
-            {
-                if (i - curFile.offset[1] >  height) break;
-
-                clearLine(i - curFile.offset[1], curFile.lines[i]);
-                Console.Write(curFile.data[i]);
-            }
+            curFile.drawFile(curFile.curLine, curFile.lines.Count);
 
             if (left != curFile.lines[curFile.curLine - 1])
             {
@@ -302,45 +302,36 @@ class Program
 
             if (curFile.curLine - curFile.offset[1] == height + 1)
             {
-                Console.SetCursorPosition(0, 0);
+                curFile.clearFile(0, height);
                 curFile.offset[1]++;
-
-                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] <= height; i++)
-                {
-                    clearLine(i - curFile.offset[1]);
-                    Console.WriteLine(curFile.data[i]);
-                }
+                curFile.drawFile(0, height);
             }
 
-            Console.SetCursorPosition(curFile.lines[curFile.curLine], curFile.curLine - curFile.offset[1]);
+            Console.SetCursorPosition(0, curFile.curLine - curFile.offset[1]);
         }
         else if (curChar == '\b')
         {
             if (left == 0)
             {
                 // Start of file
-                if (Console.CursorTop == 0)
-                {
-                    Console.SetCursorPosition(0, 0);
-                    return;
-                }
+                if (Console.CursorTop == 0) return;
+
+                int tempLeft = curFile.lines[curFile.curLine - 1];
 
                 curFile.lines[curFile.curLine - 1] += curFile.lines[curFile.curLine];
                 curFile.data[curFile.curLine - 1] += curFile.data[curFile.curLine];
 
+                curFile.clearFile(curFile.curLine - 1, curFile.lines.Count);
+
                 curFile.lines.RemoveAt(curFile.curLine);
                 curFile.data.RemoveAt(curFile.curLine);
-
-                for (int i = curFile.curLine - 1; i < curFile.lines.Count; i++)
-                {
-                    clearLine(i);
-                    Console.Write(curFile.data[i]);
-                }
+                
+                curFile.drawFile(curFile.curLine - 1, curFile.lines.Count);
                 clearLine(curFile.lines.Count);
 
                 curFile.curLine--;
 
-                Console.SetCursorPosition(curFile.lines[curFile.curLine], curFile.curLine);
+                Console.SetCursorPosition(tempLeft, curFile.curLine);
                 return;
             }
 
@@ -397,9 +388,9 @@ class Program
             }
             else
             {
+                curFile.data[curFile.curLine] += "{}";
                 Console.Write("{}");
                 Console.SetCursorPosition(left + 1, top);
-                curFile.data[curFile.curLine] += "{}";
             }
             curFile.lines[curFile.curLine] += 2;
         }
@@ -456,16 +447,20 @@ class Program
         {
             if (left == curFile.lines[curFile.curLine])
             {
+                if (curFile.lines.Count - 1 == curFile.curLine)
+                {
+                    return;
+                }
+
+                curFile.clearFile(curFile.curLine, curFile.lines.Count);
+
                 curFile.data[curFile.curLine] += curFile.data[curFile.curLine + 1];
                 curFile.data.RemoveAt(curFile.curLine + 1);
                 curFile.lines[curFile.curLine] += curFile.lines[curFile.curLine + 1];
                 curFile.lines.RemoveAt(curFile.curLine + 1);
 
-                for (int i = curFile.curLine; i < curFile.lines.Count; i++)
-                {
-                    clearLine(i);
-                    Console.Write(curFile.data[i]);
-                }
+                
+                curFile.drawFile(curFile.curLine, curFile.lines.Count);
                 clearLine(curFile.lines.Count);
 
                 Console.SetCursorPosition(left, curFile.curLine);
@@ -487,10 +482,18 @@ class Program
         }
         else if (curKeyInfo.Key == ConsoleKey.End)
         {
+            int height = Console.WindowHeight;
             if (curKeyInfo.Modifiers == ConsoleModifiers.Control)
             {
+                if (curFile.offset[1] < curFile.lines.Count - (height - endFilePos) - 1)
+                {
+                    curFile.clearFile(0, curFile.lines.Count);
+                    curFile.offset[1] = curFile.lines.Count - (height - endFilePos) - 1;
+                    curFile.drawFile(0, curFile.lines.Count);
+                }
+
                 curFile.curLine = curFile.lines.Count-1;
-                Console.SetCursorPosition(curFile.lines[curFile.curLine], curFile.curLine);
+                Console.SetCursorPosition(curFile.lines[curFile.curLine], curFile.curLine - curFile.offset[1]);
             }
             else
             {
@@ -501,6 +504,13 @@ class Program
         {
             if (curKeyInfo.Modifiers == ConsoleModifiers.Control)
             {
+                if (curFile.offset[1] > 0)
+                {
+                    curFile.clearFile(0, curFile.lines.Count);
+                    curFile.offset[1] = 0;
+                    curFile.drawFile(0, curFile.lines.Count);
+                }
+
                 curFile.curLine = 0;
                 Console.SetCursorPosition(0, 0);
             }
@@ -519,61 +529,49 @@ class Program
         }
         else if (curKeyInfo.Key == ConsoleKey.UpArrow)
         {
-            int height = Console.WindowHeight - 4;
-
             if (curFile.curLine == 0) return;
 
+            int height = Console.WindowHeight - endFilePos;
             curFile.curLine--;
-
             left = Console.CursorLeft;
 
+            // Moving cursor to the correct position
             if (Console.CursorLeft > curFile.lines[curFile.curLine])
             {
                 Console.SetCursorPosition(curFile.lines[curFile.curLine], Console.CursorTop - 1);
             }
-            else if (Console.CursorTop == 0) ;
+            else if (Console.CursorTop == 0); // Stops trying to move too hight (above window)
             else Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop - 1);
 
             if (curFile.curLine - curFile.offset[1] < 0)
             {
-                Console.SetCursorPosition(0, 0);
+                curFile.clearFile(0, height);
                 curFile.offset[1]--;
-
-                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] <= height; i++)
-                {
-                    clearLine(i - curFile.offset[1], curFile.lines[i + 1]);
-                    Console.WriteLine(curFile.data[i]);
-                }
+                curFile.drawFile(0, height);
                 Console.SetCursorPosition(left, 0);
             }
         }
         else if (curKeyInfo.Key == ConsoleKey.DownArrow)
         {
-            int height = Console.WindowHeight - 4;
+            if (curFile.curLine == curFile.lines.Count - 1) return;
 
-            if (curFile.curLine == curFile.lines.Count-1) return;
-
+            int height = Console.WindowHeight - endFilePos + 1;
             curFile.curLine++;
-
             left = Console.CursorLeft;
 
+            // Get the correct position
             if (Console.CursorLeft > curFile.lines[curFile.curLine])
             {
                 Console.SetCursorPosition(curFile.lines[curFile.curLine], Console.CursorTop + 1);
             }
             else Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop + 1);
 
-            if (Console.CursorTop > height)
+            if (Console.CursorTop >= height)
             {
-                Console.SetCursorPosition(0, 0);
+                curFile.clearFile(0, height);
                 curFile.offset[1]++;
-
-                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] <= height; i++)
-                {
-                    clearLine(i - curFile.offset[1], curFile.lines[i - 1]);
-                    Console.WriteLine(curFile.data[i]);
-                }
-                Console.SetCursorPosition(left, height);
+                curFile.drawFile(0, height);
+                Console.SetCursorPosition(left, height - 1);
             }
         }
         else if (curKeyInfo.Key == ConsoleKey.LeftArrow)
@@ -634,101 +632,61 @@ class Program
         char curChar = curKeyInfo.KeyChar;
         int height = Console.WindowHeight;
         int width = Console.WindowWidth;
-        if (curChar == '\u0011')
+        if (curChar == '\u0011') // ^q
         {
             curMode = Modes.Commands;
-            Console.SetCursorPosition(0, Console.WindowHeight - 2);
+            Console.SetCursorPosition(0, Console.WindowHeight - commandPos);
         }
         else if (curChar == 'a')
         {
-            if (curExplorerFiles.Length == 0)
-            {
-                return;
-            }
+            if (curExplorerFiles.Length == 0) return;
+
+            // Flip between 0 and 1
             curExplorerType--;
-            if (curExplorerType < 0)
-            {
-                curExplorerType = 1;
-            }
+            if (curExplorerType < 0) curExplorerType = 1;
+
             curExplorerInd = 0;
             Console.SetCursorPosition(dirIndent * curExplorerType, 0);
         }
         else if (curChar == 'f')
         {
             curExplorerInd++;
-            if (curExplorerType == 0)
+            int length = curExplorerType == 0 ? curExplorerDirs.Length : curExplorerFiles.Length;
+
+            if (curExplorerInd == length)
             {
-                if (curExplorerInd == curExplorerDirs.Length)
+                curExplorerInd = 0;
+                if (expOffset != 0)
                 {
-                    curExplorerInd = 0;
-                    if (expOffset != 0)
-                    {
-                        expOffset = 0;
-                        displayDir();
-                    }
-                }
-                if (curExplorerInd - expOffset == height - 4)
-                {
-                    expOffset++;
+                    expOffset = 0;
                     displayDir();
                 }
             }
-            else if (curExplorerType == 1)
+            if (curExplorerInd - expOffset == height - endFilePos)
             {
-                if (curExplorerInd == curExplorerFiles.Length)
-                {
-                    curExplorerInd = 0;
-                    if (expOffset != 0)
-                    {
-                        expOffset = 0;
-                        displayDir();
-                    }
-                }
-                if (curExplorerInd - expOffset == height - 4)
-                {
-                    expOffset++;
-                    displayDir();
-                }
+                expOffset++;
+                displayDir();
             }
             Console.SetCursorPosition(dirIndent * curExplorerType, curExplorerInd-expOffset);
         }
         else if (curChar == 'e')
         {
             curExplorerInd--;
+            int length = curExplorerType == 0 ? curExplorerDirs.Length : curExplorerFiles.Length;
             
-            if (curExplorerType == 0)
+            if (curExplorerInd == -1)
             {
-                if (curExplorerInd == -1)
+                curExplorerInd = length - 1;
+                if (curExplorerInd >= height - endFilePos)
                 {
-                    curExplorerInd = curExplorerDirs.Length - 1;
-                    if (curExplorerInd >= height - 4)
-                    {
-                        expOffset = curExplorerInd - height + 5;
-                        displayDir();
-                    }
-                }
-                if (curExplorerInd - expOffset == -1)
-                {
-                    expOffset--;
+                    expOffset = curExplorerInd - height + endFilePos + 1;
                     displayDir();
                 }
             }
-            else if (curExplorerType == 1)
+            if (curExplorerInd - expOffset == -1)
             {
-                if (curExplorerInd == -1)
-                {
-                    curExplorerInd = curExplorerFiles.Length - 1;
-                    if (curExplorerInd >= height - 4)
-                    {
-                        expOffset = curExplorerInd - height + 5;
-                        displayDir();
-                    }
-                }
-                if (curExplorerInd - expOffset == -1)
-                {
-                    expOffset--;
-                    displayDir();
-                }
+                expOffset--;
+                displayDir();
             }
             Console.SetCursorPosition(dirIndent * curExplorerType, curExplorerInd-expOffset);
         }
@@ -790,16 +748,8 @@ class Program
                     curFiles[fileName].lines.Add(curFiles[fileName].data[i].Length);
                 }
 
-                string line;
-                for (int i = 0; i < curFiles[fileName].data.Count && i < height - 5; i++)
-                {
-                    line = curFiles[fileName].data[i];
-                    if (line.Length > width)
-                    {
-                        line = line.Substring(0, width);
-                    }
-                    Console.WriteLine(line);
-                }
+                FileTemp curFile = curFiles[fileName];
+                curFile.drawFile(0, height);
 
                 regularBar();
                 infoBarValues.Add(fileName);

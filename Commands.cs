@@ -33,11 +33,6 @@ namespace fix
 
         private static Panic buildRun(string[] args)
         {
-            //if (args.Length != 1)
-            //{
-            //    return new Panic("Incorrect number of arguements");
-            //}
-
             Panic err = saveFile(args);
             if (err != null)
             {
@@ -59,30 +54,11 @@ namespace fix
                 return new Panic("This filetype does not have a runner associated with it.");
             }
 
-            /*string runner = Configure.validRunners[extension];
-
-            string strCmdText = "/C " + runner + " " + curFiles[curFileName].fullName;
-            Process.Start("CMD.exe", strCmdText);
-
-            Console.ReadKey(true);
-
-            err = gotoFile(new string[] { curFileName });
-            if (err != null)
-            {
-                return err;
-            }*/
-
-
             return null;
         }
 
         private static Panic runBuilder(string[] args)
         {
-            //if (args.Length != 1)
-            //{
-            //    return new Panic("Incorrect number of arguements");
-            //}
-
             Panic err = saveFile(args);
             if (err != null)
             {
@@ -124,7 +100,6 @@ namespace fix
                 {
                     FileName = "cmd.exe",
                     RedirectStandardInput = true,
-                    //RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = false
                 }
@@ -146,21 +121,13 @@ namespace fix
             Console.ReadKey(true);
 
             err = gotoFile(new string[] { curFileName });
-            if (err != null)
-            {
-                return err;
-            }
+            if (err != null) return err;
 
             return null;
         }
 
         private static Panic runRunner(string[] args)
         {
-            //if (args.Length != 1)
-            //{
-            //    return new Panic("Incorrect number of arguements");
-            //}
-
             Panic err = saveFile(args);
             if (err != null)
             {
@@ -202,7 +169,6 @@ namespace fix
                 {
                     FileName = "cmd.exe",
                     RedirectStandardInput = true,
-                    //RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = false
                 }
@@ -224,10 +190,7 @@ namespace fix
             Console.ReadKey(true);
 
             err = gotoFile(new string[] { curFileName });
-            if (err != null)
-            {
-                return err;
-            }
+            if (err != null) return err;
 
             return null;
         }
@@ -268,9 +231,9 @@ namespace fix
             {
                 infoBarValues.Add(item.Key);
             }
+            clearCommandBar();
             clearInfoBar();
             infoBar();
-            clearCommandBar();
             return null;
         }
 
@@ -330,55 +293,32 @@ namespace fix
 
             bool isIndex = int.TryParse(args[0], out int index);
 
+            string fileName;
             if (isIndex)
             {
-                string fileName = curFiles.ElementAt(index).Key;
-
-                curScreen = Screens.File_Editing;
-                validCommands = fileCommands;
-
-                curFileName = fileName;
-                FileTemp curFile = curFiles[fileName];
-
-                Console.Clear();
-
-                int height = Console.WindowHeight - 4;
-                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] < height; i++)
-                {
-                    Console.WriteLine(curFile.data[i]);
-                }
-
-                regularBar();
-                infoBar();
-
-                return null;
+                fileName = curFiles.ElementAt(index).Key;
             }
-
             else if (curFiles.ContainsKey(args[0]))
             {
-                string fileName = args[0];
-
-                curScreen = Screens.File_Editing;
-                validCommands = fileCommands;
-
-                curFileName = fileName;
-                FileTemp curFile = curFiles[fileName];
-
-                Console.Clear();
-
-                int height = Console.WindowHeight - 4;
-                for (int i = curFile.offset[1]; i < curFile.data.Count && i - curFile.offset[1] < height; i++)
-                {
-                    Console.WriteLine(curFile.data[i]);
-                }
-
-                regularBar();
-                infoBar();
-
-                return null;
+                fileName = args[0];
             }
+            else return new Panic("The argument given was not a valid int or not found in current files.");
 
-            return new Panic("The argument given was not a valid int or not found in current files.");
+            curScreen = Screens.File_Editing;
+            validCommands = fileCommands;
+
+            curFileName = fileName;
+            FileTemp curFile = curFiles[fileName];
+
+            Console.Clear();
+
+            int height = Console.WindowHeight - endFilePos;
+            curFile.drawFile(0, height);
+
+            regularBar();
+            infoBar();
+
+            return null;
         }
 
         private static Panic openFileExplorer(string[] args)
@@ -416,7 +356,7 @@ namespace fix
 
             string fileName = args[0];
 
-            if (curFiles.ContainsKey(fileName))
+            if (curFiles.ContainsKey(fileName) || curExplorerFiles.Contains(fileName))
             {
                 return new Panic("Filename already exists.");
             }
@@ -497,7 +437,7 @@ namespace fix
             }
 
             clearCommandBar();
-            //Console.SetCursorPosition(0, 0);
+            Console.SetCursorPosition(0, Console.WindowHeight - commandPos);
 
             return null;
         }
@@ -518,7 +458,7 @@ namespace fix
             }
 
             clearCommandBar();
-            //Console.SetCursorPosition(0, 0);
+            Console.SetCursorPosition(0, Console.WindowHeight - commandPos);
 
             return null;
         }
