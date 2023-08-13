@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace fix
+﻿namespace fix
 {
     internal class Configure
     {
@@ -158,6 +156,15 @@ namespace fix
             string[] runner;
             string cmd;
 
+            /*
+                runner[0] = run | build
+                runner[1] = extension type
+                runner[2] = command terminal type
+                runner[3] = new terminal
+                runner[4] = output flag
+                runner[5] = command
+             */
+
             for (int i = 0; i < runners.Length; i++)
             {
                 runner = runners[i].Split(' ');
@@ -182,10 +189,15 @@ namespace fix
                         return new Panic("Command prompter not valid.");
                 }
 
-                string outFlag = runner[3];
+                if (runner[3] != "true" && runner[3] != "false")
+                {
+                    return new Panic("New terminal prompt was not true or false.");
+                }
+
+                string outFlag = runner[4];
                 outFlag = outFlag.Replace("<space>", " ");
 
-                cmd = runner[4];
+                cmd = runner[5];
                 for (int j = 5; j < runner.Length; j++)
                 {
                     cmd += " " + runner[j];
@@ -193,11 +205,11 @@ namespace fix
 
                 if (runner[0] == "run")
                 {
-                    validRunners.Add(runner[1], new string[] { runner[2], outFlag, cmd });
+                    validRunners.Add(runner[1], new string[] { runner[2], runner[3], outFlag, cmd });
                 }
                 else if (runner[0] == "build")
                 {
-                    validBuilders.Add(runner[1], new string[] { runner[2], outFlag, cmd });
+                    validBuilders.Add(runner[1], new string[] { runner[2], runner[3], outFlag, cmd });
                 }
                 else
                 {

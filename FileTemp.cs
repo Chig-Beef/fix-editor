@@ -1,4 +1,6 @@
-﻿namespace fix
+﻿using static Program;
+
+namespace fix
 {
     internal class FileTemp
     {
@@ -10,7 +12,6 @@
 
         public List<int> lines;
         public List<string> data;
-        
 
         public FileTemp(string sName, string sFullName)
         {
@@ -25,18 +26,19 @@
 
         public void drawFile(int start, int end)
         {
-            int height = Console.WindowHeight - Program.endFilePos + 1;
+            int height = Console.WindowHeight - endFilePos + 1;
             int width = Console.WindowWidth;
 
             Console.SetCursorPosition(0, start);
 
+            //end += offset[1];
             end = end < data.Count ? end : data.Count;
             end = end < height ? end : height;
 
             string line;
             for (int i = offset[1] + start; i < end + offset[1]; i++)
             {
-                line = data[i];
+                line = data[i].Substring(offset[0]);
                 if (line.Length > width)
                 {
                     line = line.Substring(0, width);
@@ -47,14 +49,14 @@
 
         public void clearFile(int start, int end)
         {
-            int height = Console.WindowHeight - Program.endFilePos + 1;
+            int height = Console.WindowHeight - endFilePos + 1;
 
             end = end < data.Count ? end : data.Count;
             end = end < height ? end : height;
 
             for (int i = offset[1] + start; i < end + offset[1]; i++)
             {
-                Program.clearLine(i - offset[1], lines[i]);
+                clearLine(i - offset[1], lines[i]);
             }
         }
     }

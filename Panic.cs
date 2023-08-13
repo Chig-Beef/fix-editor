@@ -1,4 +1,6 @@
-﻿namespace fix
+﻿using static Program;
+
+namespace fix
 {
     internal class Panic
     {
@@ -6,7 +8,7 @@
         {
             Console.Write(message + " (Press any key to continue)");
             Console.ReadKey();
-            Program.clearCommandBar();
+            clearLine(-commandPos);
         }
     }
 }

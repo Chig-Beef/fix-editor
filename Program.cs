@@ -1,4 +1,5 @@
 ﻿using fix;
+using System.Diagnostics;
 
 class Program
 {
@@ -20,6 +21,7 @@ class Program
     public static readonly int barPos = 3;
     public static readonly int commandPos = 2;
     public static readonly int infoPos = 1;
+    public static string selectedItem;
 
     public static string[] validCommands;
 
@@ -37,7 +39,6 @@ class Program
     public static string[] fileCommands = new string[]
     {
         "fe",
-        //"nf",
         "q",
         "mw",
         "s",
@@ -151,22 +152,13 @@ class Program
         Console.SetCursorPosition(0, height - commandPos);
     }
 
-    public static void clearCommandBar()
-    {
-        int width = Console.WindowWidth;
-        int height = Console.WindowHeight;
-        string bar = "";
-
-        for (int x = 0; x < width; x++) bar += " ";
-
-        Console.SetCursorPosition(0, height - commandPos);
-        Console.Write(bar);
-    }
-
     public static void clearLine(int line)
     {
+        int height = Console.WindowHeight;
         int width = Console.WindowWidth;
         string bar = "";
+
+        if (line < 0) line = height + line;
 
         for (int x = 0; x < width; x++) bar += " ";
 
@@ -177,27 +169,17 @@ class Program
 
     public static void clearLine(int line, int amt)
     {
+        int height = Console.WindowHeight;
         int width = Console.WindowWidth;
         string bar = " ";
+
+        if (line < 0) line = height + line;
 
         for (int x = 0; x < amt + 1 && x < width; x++) bar += " ";
 
         Console.SetCursorPosition(0, line);
         Console.Write(bar);
         Console.SetCursorPosition(0, line);
-    }
-
-    public static void clearInfoBar()
-    {
-        int width = Console.WindowWidth;
-        int height = Console.WindowHeight;
-        string bar = "";
-
-        for (int x = 0; x < width; x++) bar += " ";
-
-        Console.SetCursorPosition(0, height - infoPos);
-        Console.Write(bar);
-        Console.SetCursorPosition(0, height - infoPos);
     }
 
     public static void displayDir()
@@ -266,6 +248,7 @@ class Program
         int left = Console.CursorLeft;
         int top = Console.CursorTop;
         int width = Console.WindowWidth;
+        int height = Console.WindowHeight;
 
         ConsoleKeyInfo curKeyInfo = Console.ReadKey(true);
         char curChar = curKeyInfo.KeyChar;
@@ -273,7 +256,7 @@ class Program
 
         if (curChar == '\r')
         {
-            int height = Console.WindowHeight - endFilePos;
+            height -= endFilePos;
 
             Console.Write('\n');
 
@@ -311,7 +294,7 @@ class Program
         }
         else if (curChar == '\b')
         {
-            if (left == 0)
+           if (left == 0)
             {
                 // Start of file
                 if (Console.CursorTop == 0) return;
@@ -325,20 +308,22 @@ class Program
 
                 curFile.lines.RemoveAt(curFile.curLine);
                 curFile.data.RemoveAt(curFile.curLine);
-                
-                curFile.drawFile(curFile.curLine - 1, curFile.lines.Count);
-                clearLine(curFile.lines.Count);
+
+                if (curFile.offset[1] > 0) curFile.offset[1]--;
+
+                curFile.drawFile(curFile.curLine - 1 - curFile.offset[1], height - endFilePos);
+                clearLine(curFile.lines.Count - curFile.offset[1]);
 
                 curFile.curLine--;
 
-                Console.SetCursorPosition(tempLeft, curFile.curLine);
+                Console.SetCursorPosition(tempLeft, curFile.curLine - curFile.offset[1]);
                 return;
             }
 
             curFile.lines[curFile.curLine]--;
             curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Substring(0, left - 1) + curFile.data[curFile.curLine].Substring(left);
 
-            clearLine(curFile.curLine);
+            clearLine(curFile.curLine - curFile.offset[1]);
             Console.Write(curFile.data[curFile.curLine]);
 
             Console.SetCursorPosition(left - 1, Console.CursorTop);
@@ -482,7 +467,6 @@ class Program
         }
         else if (curKeyInfo.Key == ConsoleKey.End)
         {
-            int height = Console.WindowHeight;
             if (curKeyInfo.Modifiers == ConsoleModifiers.Control)
             {
                 if (curFile.offset[1] < curFile.lines.Count - (height - endFilePos) - 1)
@@ -531,7 +515,7 @@ class Program
         {
             if (curFile.curLine == 0) return;
 
-            int height = Console.WindowHeight - endFilePos;
+            height -= endFilePos;
             curFile.curLine--;
             left = Console.CursorLeft;
 
@@ -555,7 +539,7 @@ class Program
         {
             if (curFile.curLine == curFile.lines.Count - 1) return;
 
-            int height = Console.WindowHeight - endFilePos + 1;
+            height = Console.WindowHeight - endFilePos + 1;
             curFile.curLine++;
             left = Console.CursorLeft;
 
@@ -587,8 +571,7 @@ class Program
             if (Console.CursorLeft == width - 1)
             {
                 curFile.offset[0]++;
-
-                int height = Console.WindowHeight - 4;
+                height -= endFilePos;
                 Console.SetCursorPosition(0, 0);
 
                 string line;
@@ -754,6 +737,61 @@ class Program
                 regularBar();
                 infoBarValues.Add(fileName);
                 infoBar();
+            }
+        }
+        else if (curChar == 's')
+        {
+            if (curExplorerType == 0)
+            {
+                selectedItem = curExplorerDirs[curExplorerInd];
+            }
+            if (curExplorerType == 1)
+            {
+                selectedItem = curExplorerFiles[curExplorerInd];
+
+                Console.Clear();
+
+                int ind = curExplorerFiles[curExplorerInd].IndexOf(".");
+                if (ind == -1)
+                {
+                    new Panic("This file doesn't have a file extension.");
+                    return;
+                }
+
+                string extension = curExplorerFiles[curExplorerInd].Substring(ind);
+                if (extension != ".exe")
+                {
+                    new Panic("File must be an exe.");
+                    return;
+                }
+
+                string strCmdText = curDir + "\\" + curExplorerFiles[curExplorerInd];
+
+                /*var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = strCmdText,
+                        RedirectStandardInput = false,
+                        UseShellExecute = true,
+                        CreateNoWindow = false
+                    }
+                };
+
+                process.Start();
+
+                //process.StandardInput.WriteLine(strCmdText);
+                //process.StandardInput.WriteLine("exit");
+
+                process.WaitForExit();*/
+
+                //string strCmdText;
+                strCmdText = "fix";
+                System.Diagnostics.Process.Start("CMD.exe", strCmdText);
+
+                Console.WriteLine("Press any key to return.");
+                Console.ReadKey(true);
             }
         }
     }

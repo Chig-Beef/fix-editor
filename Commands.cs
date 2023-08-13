@@ -34,10 +34,7 @@ namespace fix
         private static Panic buildRun(string[] args)
         {
             Panic err = saveFile(args);
-            if (err != null)
-            {
-                return err;
-            }
+            if (err != null) return err;
 
             Console.Clear();
 
@@ -60,10 +57,7 @@ namespace fix
         private static Panic runBuilder(string[] args)
         {
             Panic err = saveFile(args);
-            if (err != null)
-            {
-                return err;
-            }
+            if (err != null) return err;
 
             Console.Clear();
 
@@ -84,14 +78,14 @@ namespace fix
 
             string strCmdText = builder + " " + curFiles[curFileName].fullName;
 
-            if (Configure.validBuilders[extension][1] != "null")
+            if (Configure.validBuilders[extension][2] != "null")
             {
                 string outName;
                 int length = curFileName.Length - curFileName.IndexOf(".");
 
                 outName = curFiles[curFileName].fullName.Substring(0, curFiles[curFileName].fullName.Length - length) + ".exe";
 
-                strCmdText += " " + Configure.validBuilders[extension][1] + outName;
+                strCmdText += " " + Configure.validBuilders[extension][2] + outName;
             }
 
             var process = new Process
@@ -101,7 +95,7 @@ namespace fix
                     FileName = "cmd.exe",
                     RedirectStandardInput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = false
+                    CreateNoWindow = Convert.ToBoolean(Configure.validBuilders[extension][1])
                 }
             };
 
@@ -129,10 +123,7 @@ namespace fix
         private static Panic runRunner(string[] args)
         {
             Panic err = saveFile(args);
-            if (err != null)
-            {
-                return err;
-            }
+            if (err != null) return err;
 
             Console.Clear();
 
@@ -153,14 +144,14 @@ namespace fix
 
             string strCmdText = runner + " " + curFiles[curFileName].fullName;
 
-            if (Configure.validRunners[extension][1] != "null")
+            if (Configure.validRunners[extension][2] != "null")
             {
                 string outName;
                 int length = curFileName.Length - curFileName.IndexOf(".");
 
                 outName = curFiles[curFileName].fullName.Substring(0, curFiles[curFileName].fullName.Length - length) + ".exe";
 
-                strCmdText += " " + Configure.validRunners[extension][1] + outName;
+                strCmdText += " " + Configure.validRunners[extension][2] + outName;
             }
 
             var process = new Process
@@ -170,7 +161,7 @@ namespace fix
                     FileName = "cmd.exe",
                     RedirectStandardInput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = false
+                    CreateNoWindow = Convert.ToBoolean(Configure.validRunners[extension][1])
                 }
             };
 
@@ -198,7 +189,7 @@ namespace fix
         private static Panic runConfig(string[] args)
         {
             getConfig();
-            clearCommandBar();
+            clearLine(-commandPos);
 
             return null;
         }
@@ -231,8 +222,8 @@ namespace fix
             {
                 infoBarValues.Add(item.Key);
             }
-            clearCommandBar();
-            clearInfoBar();
+            clearLine(-commandPos);
+            clearLine(-infoPos);
             infoBar();
             return null;
         }
@@ -261,7 +252,7 @@ namespace fix
                 curFiles.Remove(curFiles.ElementAt(index).Key);
 
                 listFiles(args);
-                clearCommandBar();
+                clearLine(-commandPos);
 
                 return null;
             }
@@ -276,7 +267,7 @@ namespace fix
                 curFiles.Remove(args[0]);
 
                 listFiles(args);
-                clearCommandBar();
+                clearLine(-commandPos);
 
                 return null;
             }
@@ -296,6 +287,10 @@ namespace fix
             string fileName;
             if (isIndex)
             {
+                if (curFiles.Count < index)
+                {
+                    return new Panic("Index out of range.");
+                }
                 fileName = curFiles.ElementAt(index).Key;
             }
             else if (curFiles.ContainsKey(args[0]))
@@ -392,7 +387,7 @@ namespace fix
                 curExplorerFiles[i] = curExplorerFiles[i].Substring(curDir.Length + 1);
             }
 
-            clearInfoBar();
+            clearLine(-infoPos);
             infoBar();
             displayDir();
 
@@ -410,8 +405,15 @@ namespace fix
 
         private static Panic writeMode(string[] args)
         {
+            int height = Console.WindowHeight;
             curMode = Modes.Writing;
-            clearCommandBar();
+            clearLine(-commandPos);
+
+            if (curFiles[curFileName].curLine > height - endFilePos)
+            {
+                curFiles[curFileName].offset[1] = 
+            }
+
             Console.SetCursorPosition(0, curFiles[curFileName].curLine);
             return null;
         }
@@ -419,7 +421,7 @@ namespace fix
         private static Panic exploreMode(string[] args)
         {
             curMode = Modes.Exploring;
-            clearCommandBar();
+            clearLine(-commandPos);
             Console.SetCursorPosition(0, 0);
             return null;
         }
@@ -436,7 +438,7 @@ namespace fix
                 }
             }
 
-            clearCommandBar();
+            clearLine(-commandPos);
             Console.SetCursorPosition(0, Console.WindowHeight - commandPos);
 
             return null;
@@ -457,7 +459,7 @@ namespace fix
                 }
             }
 
-            clearCommandBar();
+            clearLine(-commandPos);
             Console.SetCursorPosition(0, Console.WindowHeight - commandPos);
 
             return null;
