@@ -198,7 +198,7 @@
                 outFlag = outFlag.Replace("<space>", " ");
 
                 cmd = runner[5];
-                for (int j = 5; j < runner.Length; j++)
+                for (int j = 6; j < runner.Length; j++)
                 {
                     cmd += " " + runner[j];
                 }

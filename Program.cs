@@ -264,7 +264,7 @@ class Program
             curFile.curLine++;
             curFile.lines.Insert(curFile.curLine, 0);
             curFile.data.Insert(curFile.curLine, "");
-            curFile.drawFile(curFile.curLine, curFile.lines.Count);
+            curFile.drawFile(curFile.curLine - curFile.offset[1], curFile.lines.Count - curFile.offset[1]);
 
             if (left != curFile.lines[curFile.curLine - 1])
             {
@@ -285,7 +285,7 @@ class Program
 
             if (curFile.curLine - curFile.offset[1] == height + 1)
             {
-                curFile.clearFile(0, height);
+                curFile.clearFile(0, height + 1);
                 curFile.offset[1]++;
                 curFile.drawFile(0, height);
             }
@@ -294,7 +294,7 @@ class Program
         }
         else if (curChar == '\b')
         {
-           if (left == 0)
+            if (left == 0)
             {
                 // Start of file
                 if (Console.CursorTop == 0) return;
@@ -304,15 +304,25 @@ class Program
                 curFile.lines[curFile.curLine - 1] += curFile.lines[curFile.curLine];
                 curFile.data[curFile.curLine - 1] += curFile.data[curFile.curLine];
 
-                curFile.clearFile(curFile.curLine - 1, curFile.lines.Count);
+                if (curFile.offset[1] > 0)
+                {
+                    curFile.clearFile(0, curFile.lines.Count);
+                    curFile.offset[1]--;
 
-                curFile.lines.RemoveAt(curFile.curLine);
-                curFile.data.RemoveAt(curFile.curLine);
+                    curFile.lines.RemoveAt(curFile.curLine);
+                    curFile.data.RemoveAt(curFile.curLine);
 
-                if (curFile.offset[1] > 0) curFile.offset[1]--;
+                    curFile.drawFile(0, height);
+                }
+                else
+                {
+                    curFile.clearFile(curFile.curLine, curFile.lines.Count);
 
-                curFile.drawFile(curFile.curLine - 1 - curFile.offset[1], height - endFilePos);
-                clearLine(curFile.lines.Count - curFile.offset[1]);
+                    curFile.lines.RemoveAt(curFile.curLine);
+                    curFile.data.RemoveAt(curFile.curLine);
+
+                    curFile.drawFile(curFile.curLine - 1 - curFile.offset[1], height - endFilePos);
+                }
 
                 curFile.curLine--;
 
@@ -767,31 +777,27 @@ class Program
 
                 string strCmdText = curDir + "\\" + curExplorerFiles[curExplorerInd];
 
-                /*var process = new Process
+                var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = "cmd.exe",
-                        Arguments = strCmdText,
+                        FileName = strCmdText,
                         RedirectStandardInput = false,
                         UseShellExecute = true,
-                        CreateNoWindow = false
+                        CreateNoWindow = false,
                     }
                 };
 
                 process.Start();
-
-                //process.StandardInput.WriteLine(strCmdText);
-                //process.StandardInput.WriteLine("exit");
-
-                process.WaitForExit();*/
-
-                //string strCmdText;
-                strCmdText = "fix";
-                System.Diagnostics.Process.Start("CMD.exe", strCmdText);
+                process.WaitForExit();
 
                 Console.WriteLine("Press any key to return.");
                 Console.ReadKey(true);
+
+                Console.Clear();
+                infoBar();
+                curMode = Modes.Commands;
+                Console.SetCursorPosition(0, Console.WindowHeight - commandPos);
             }
         }
     }

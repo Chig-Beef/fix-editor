@@ -76,7 +76,7 @@ namespace fix
 
             string builder = Configure.validBuilders[extension][2];
 
-            string strCmdText = builder + " " + curFiles[curFileName].fullName;
+            string strCmdText = Configure.validBuilders[extension][3] + " " + curFiles[curFileName].fullName;
 
             if (Configure.validBuilders[extension][2] != "null")
             {
@@ -85,7 +85,7 @@ namespace fix
 
                 outName = curFiles[curFileName].fullName.Substring(0, curFiles[curFileName].fullName.Length - length) + ".exe";
 
-                strCmdText += " " + Configure.validBuilders[extension][2] + outName;
+                strCmdText += " " + builder + outName;
             }
 
             var process = new Process
@@ -287,7 +287,7 @@ namespace fix
             string fileName;
             if (isIndex)
             {
-                if (curFiles.Count < index)
+                if (curFiles.Count <= index)
                 {
                     return new Panic("Index out of range.");
                 }
@@ -308,7 +308,7 @@ namespace fix
             Console.Clear();
 
             int height = Console.WindowHeight - endFilePos;
-            curFile.drawFile(0, height);
+            curFile.drawFile(0, height + 1);
 
             regularBar();
             infoBar();
@@ -402,7 +402,7 @@ namespace fix
             Environment.Exit(0);
             return null;
         }
-
+        
         private static Panic writeMode(string[] args)
         {
             int height = Console.WindowHeight;
@@ -411,10 +411,10 @@ namespace fix
 
             if (curFiles[curFileName].curLine > height - endFilePos)
             {
-                curFiles[curFileName].offset[1] = 
+                //curFiles[curFileName].offset[1] = 
             }
 
-            Console.SetCursorPosition(0, curFiles[curFileName].curLine);
+            Console.SetCursorPosition(0, curFiles[curFileName].curLine - curFiles[curFileName].offset[1]);
             return null;
         }
 
