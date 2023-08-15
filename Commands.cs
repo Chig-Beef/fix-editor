@@ -56,68 +56,129 @@ namespace fix
 
         private static Panic runBuilder(string[] args)
         {
-            Panic err = saveFile(args);
-            if (err != null) return err;
-
-            Console.Clear();
-
-            int ind = curFileName.IndexOf(".");
-            if (ind == -1)
+            Panic err;
+            if (curScreen == Screens.File_Editing)
             {
-                return new Panic("This file doesn't have a file extension.");
-            }
+                err = saveFile(args);
+                if (err != null) return err;
 
-            string extension = curFileName.Substring(ind);
+                Console.Clear();
 
-            if (!Configure.validBuilders.ContainsKey(extension))
-            {
-                return new Panic("This filetype does not have a builder associated with it.");
-            }
-
-            string builder = Configure.validBuilders[extension][2];
-
-            string strCmdText = Configure.validBuilders[extension][3] + " " + curFiles[curFileName].fullName;
-
-            if (Configure.validBuilders[extension][2] != "null")
-            {
-                string outName;
-                int length = curFileName.Length - curFileName.IndexOf(".");
-
-                outName = curFiles[curFileName].fullName.Substring(0, curFiles[curFileName].fullName.Length - length) + ".exe";
-
-                strCmdText += " " + builder + outName;
-            }
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
+                int ind = curFileName.IndexOf(".");
+                if (ind == -1)
                 {
-                    FileName = "cmd.exe",
-                    RedirectStandardInput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = Convert.ToBoolean(Configure.validBuilders[extension][1])
+                    return new Panic("This file doesn't have a file extension.");
                 }
-            };
 
-            process.Start();
+                string extension = curFileName.Substring(ind);
 
-            if (Configure.validBuilders[extension][0] == "dev")
-            {
-                process.StandardInput.WriteLine("\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" amd64");
+                if (!Configure.validBuilders.ContainsKey(extension))
+                {
+                    return new Panic("This filetype does not have a builder associated with it.");
+                }
+
+                string builder = Configure.validBuilders[extension][2];
+
+                string strCmdText = Configure.validBuilders[extension][3] + " " + curFiles[curFileName].fullName;
+
+                if (Configure.validBuilders[extension][2] != "null")
+                {
+                    string outName;
+                    int length = curFileName.Length - curFileName.IndexOf(".");
+
+                    outName = curFiles[curFileName].fullName.Substring(0, curFiles[curFileName].fullName.Length - length) + ".exe";
+
+                    strCmdText += " " + builder + outName;
+                }
+
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        RedirectStandardInput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = Convert.ToBoolean(Configure.validBuilders[extension][1])
+                    }
+                };
+
+                process.Start();
+
+                if (Configure.validBuilders[extension][0] == "dev")
+                {
+                    process.StandardInput.WriteLine("\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" amd64");
+                }
+
+                process.StandardInput.WriteLine(strCmdText);
+                process.StandardInput.WriteLine("exit");
+
+                process.WaitForExit();
+
+                Console.WriteLine("Press any key to return.");
+                Console.ReadKey(true);
+
+                err = gotoFile(new string[] { curFileName });
+                if (err != null) return err;
+
+                return null;
             }
+            else // Explorer mode
+            {
+                if (args.Length < 2)
+                {
+                    return new Panic("Not enough arguements.");
+                }
 
-            process.StandardInput.WriteLine(strCmdText);
-            process.StandardInput.WriteLine("exit");
+                string extension = args[0];
+                string outName = args[1];
 
-            process.WaitForExit();
+                if (!Configure.validBuilders.ContainsKey(extension))
+                {
+                    return new Panic("This filetype does not have a builder associated with it.");
+                }
 
-            Console.WriteLine("Press any key to return.");
-            Console.ReadKey(true);
+                Console.Clear();
 
-            err = gotoFile(new string[] { curFileName });
-            if (err != null) return err;
+                string builder = Configure.validBuilders[extension][2];
 
-            return null;
+                string strCmdText = Configure.validBuilders[extension][3] + " " + curDir + "\\*" + extension;
+
+                if (Configure.validBuilders[extension][2] != "null")
+                {
+                    strCmdText += " " + builder + curDir + "\\" + outName;
+                }
+
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        RedirectStandardInput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = Convert.ToBoolean(Configure.validBuilders[extension][1])
+                    }
+                };
+
+                process.Start();
+
+                if (Configure.validBuilders[extension][0] == "dev")
+                {
+                    process.StandardInput.WriteLine("\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" amd64");
+                }
+
+                process.StandardInput.WriteLine(strCmdText);
+                process.StandardInput.WriteLine("exit");
+
+                process.WaitForExit();
+
+                Console.WriteLine("Press any key to return.");
+                Console.ReadKey(true);
+
+                err = openFileExplorer(new string[] {});
+                if (err != null) return err;
+
+                return null;
+            }
         }
 
         private static Panic runRunner(string[] args)

@@ -66,6 +66,7 @@ class Program
         "rf",
         "help",
         "cr",
+        "build",
     };
 
     public static string fmtFileSize(long size)
@@ -258,8 +259,6 @@ class Program
         {
             height -= endFilePos;
 
-            Console.Write('\n');
-
             curFile.clearFile(curFile.curLine + 1, curFile.lines.Count);
             curFile.curLine++;
             curFile.lines.Insert(curFile.curLine, 0);
@@ -287,7 +286,8 @@ class Program
             {
                 curFile.clearFile(0, height + 1);
                 curFile.offset[1]++;
-                curFile.drawFile(0, height);
+                curFile.drawFile(0, height + 1);
+                regularBar();
             }
 
             Console.SetCursorPosition(0, curFile.curLine - curFile.offset[1]);
@@ -394,14 +394,14 @@ class Program
             if (left != curFile.lines[curFile.curLine])
             {
                 curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Substring(0, left) + "    " + curFile.data[curFile.curLine].Substring(left);
-                Console.SetCursorPosition(0, curFile.curLine);
+                Console.SetCursorPosition(0, curFile.curLine - curFile.offset[1]);
                 Console.Write(curFile.data[curFile.curLine]);
-                Console.SetCursorPosition(left + 4, curFile.curLine);
+                Console.SetCursorPosition(left + 4, curFile.curLine - curFile.offset[1]);
             }
             else
             {
                 curFile.data[curFile.curLine] += "    ";
-                Console.SetCursorPosition(left + 4, curFile.curLine);
+                Console.SetCursorPosition(left + 4, curFile.curLine - curFile.offset[1]);
             }
             curFile.lines[curFile.curLine] += 4;
         }
@@ -529,20 +529,21 @@ class Program
             curFile.curLine--;
             left = Console.CursorLeft;
 
-            // Moving cursor to the correct position
-            if (Console.CursorLeft > curFile.lines[curFile.curLine])
+            if (curFile.curLine - curFile.offset[1] <= -1)
             {
-                Console.SetCursorPosition(curFile.lines[curFile.curLine], Console.CursorTop - 1);
-            }
-            else if (Console.CursorTop == 0); // Stops trying to move too hight (above window)
-            else Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop - 1);
-
-            if (curFile.curLine - curFile.offset[1] < 0)
-            {
-                curFile.clearFile(0, height);
+                curFile.clearFile(0, height + 1);
                 curFile.offset[1]--;
-                curFile.drawFile(0, height);
+                curFile.drawFile(0, height + 1);
                 Console.SetCursorPosition(left, 0);
+            }
+            else
+            {
+                // Moving cursor to the correct position
+                if (Console.CursorLeft > curFile.lines[curFile.curLine])
+                {
+                    Console.SetCursorPosition(curFile.lines[curFile.curLine], Console.CursorTop - 1);
+                }
+                else Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop - 1);
             }
         }
         else if (curKeyInfo.Key == ConsoleKey.DownArrow)
@@ -604,11 +605,11 @@ class Program
             if (left != curFile.lines[curFile.curLine])
             {
                 curFile.data[curFile.curLine] = curFile.data[curFile.curLine].Substring(0, left) + curChar + curFile.data[curFile.curLine].Substring(left);
-                Console.SetCursorPosition(0, curFile.curLine);
+                Console.SetCursorPosition(0, curFile.curLine - curFile.offset[1]);
                 string line = curFile.data[curFile.curLine];
                 if (line.Length > width) line = line.Substring(0, width);
                 Console.Write(line);
-                Console.SetCursorPosition(left+1, curFile.curLine);
+                Console.SetCursorPosition(left+1, curFile.curLine - curFile.offset[1]);
             }
             else
             {
