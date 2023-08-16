@@ -250,7 +250,6 @@ class Program
         int top = Console.CursorTop;
         int width = Console.WindowWidth;
         int height = Console.WindowHeight;
-
         ConsoleKeyInfo curKeyInfo = Console.ReadKey(true);
         char curChar = curKeyInfo.KeyChar;
         FileTemp curFile = curFiles[curFileName];
@@ -259,7 +258,7 @@ class Program
         {
             height -= endFilePos;
 
-            curFile.clearFile(curFile.curLine + 1, curFile.lines.Count);
+            curFile.clearFile(curFile.curLine + 1 - curFile.offset[1], curFile.lines.Count);
             curFile.curLine++;
             curFile.lines.Insert(curFile.curLine, 0);
             curFile.data.Insert(curFile.curLine, "");
